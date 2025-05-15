@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="input-container">
+            <div class="header">
+                <h1>Budget Tracker</h1>
+            </div>
+            <div id="balance">Balance : $0.00</div>
+            <form id="transaction-form">
+                <input type="text" id="transaction-name" placeholder="Transaction Name" required>
+                <input type="number" id="transaction-amount" placeholder="Transaction Amount" required step="0.01">
+                <input type="date" id="transaction-date" required>
+                <label class="type">Transaction Type:</label>
+                <select id="transaction-type" required>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+                <button type="submit" id="add">Add Transaction</button>
+            </form>
+        </div>
+        <div class="transaction-container">
+            <h2>Transactions</h2>
+            <div>
+            <ul id="transaction-list">
+                </ul>
+            </div>
+            <button type="button" id="delete-all">Delete All Transactions</button>
+        </div>
+    </div>
+    <script>
+        // Get DOM elements
+        const form = document.getElementById('transaction-form');
+        const transactionList = document.getElementById('transaction-list');
+        const balanceDisplay = document.getElementById('balance');
+        const deleteAllButton = document.getElementById('delete-all'); // Get the delete all button
+        // Array to store transactions
+        let transactions = [];
+        // Function to add a transaction
+        function addTransaction(e) {
+            e.preventDefault(); // Prevent actual form submission
+            const name = document.getElementById('transaction-name').value;
+            const amount = parseFloat(document.getElementById('transaction-amount').value);
+            const date = document.getElementById('transaction-date').value;
+            const type = document.getElementById('transaction-type').value;
+            // Basic validation
+            if (name.trim() === '' || isNaN(amount) || date === '') {
+                alert('Please enter valid transaction details.');
+                return;
+            }
+            const transaction = {
+                id: generateID(), // Simple ID generator
+                name: name,
+                amount: amount,
+                date: date,
+                type: type
+            };
+            transactions.push(transaction);
+            addTransactionToDOM(transaction);
+            updateBalance();
+            // Clear form fields
+            document.getElementById('transaction-name').value = '';
+            document.getElementById('transaction-amount').value = '';
+            document.getElementById('transaction-date').value = '';
+            document.getElementById('transaction-type').value = 'income'; // Reset to default
+        }
+        // Generate a simple ID
+        function generateID() {
+            return Math.floor(Math.random() * 100000000);
+        }
+        // Add transaction to DOM list
+        function addTransactionToDOM(transaction) {
+            const item = document.createElement('li');
+            // Add class based on type for styling (income/expense)
+            item.classList.add(transaction.type);
+            item.innerHTML = `
+                ${transaction.name} <span>${transaction.type === 'expense' ? '-' : '+'}$${Math.abs(transaction.amount).toFixed(2)}</span>
+                <span>${transaction.date}</span>
+                <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
+            `;
+            transactionList.appendChild(item);
+        }
+        // Update the balance
+        function updateBalance() {
+            const income = transactions
+                .filter(transaction => transaction.type === 'income')
+                .reduce((sum, transaction) => sum + transaction.amount, 0);
+            const expense = transactions
+                .filter(transaction => transaction.type === 'expense')
+                .reduce((sum, transaction) => sum + transaction.amount, 0);
+            const total = income - expense;
+            balanceDisplay.innerText = `Balance : $${total.toFixed(2)}`;
+        }
+        // Remove transaction by ID
+        function removeTransaction(id) {
+            transactions = transactions.filter(transaction => transaction.id !== id);
+            init(); // Re-render the list and update balance
+        }
+        // Delete all transactions
+        function deleteAllTransactions() {
+            transactions = [];
+            init(); // Re-render the list and update balance
+        }
+        // Initialize the app (render initial transactions and update balance)
+        function init() {
+            transactionList.innerHTML = ''; // Clear the list
+            // If you had initial transactions, you would loop through them here
+            // For now, it just clears and updates balance based on the empty array
+             transactions.forEach(addTransactionToDOM); // Add any existing transactions
+            updateBalance();
+        }
+        // Event listeners
+        form.addEventListener('submit', addTransaction);
+        deleteAllButton.addEventListener('click', deleteAllTransactions); // Add event listener for delete all button
+        // Initialize the app on page load
+        init();
+    </script>
+</body>
+</html>
